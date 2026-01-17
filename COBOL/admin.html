@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>店員管理系統 (POS)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta http-equiv="refresh" content="30"> </head>
+<body class="bg-dark text-light">
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">👨‍🍳 廚房/櫃台管理系統</h2>
+        <button class="btn btn-primary" onclick="loadData()">🔄 刷新列表</button>
+    </div>
+
+    <div class="card bg-secondary mb-4 border-0">
+        <div class="card-header bg-warning text-dark fw-bold">
+            <i class="fas fa-fire"></i> 待製作訂單 (Pending)
+        </div>
+        <div class="card-body bg-light text-dark p-0">
+            <table class="table table-striped table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>顧客</th>
+                        <th width="40%">內容</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="pending-list">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card bg-secondary border-0">
+        <div class="card-header bg-success text-white fw-bold">
+            <i class="fas fa-history"></i> 今日已完成 (History)
+        </div>
+        <div class="card-body bg-light text-dark p-0">
+            <table class="table table-sm text-muted mb-0">
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>顧客</th>
+                        <th>內容</th>
+                        <th>金額</th>
+                    </tr>
+                </thead>
+                <tbody id="completed-list">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = loadData;
+
+    function loadData() {
+        fetch('/api/admin/data')
+            .then(res => res.json())
+            .then(data => {
+                renderPending(data.pending);
+                renderCompleted(data.completed);
+            });
+    }
+
+    function renderPending(list) {
+        const container = document.getElementById('pending-list');
+        if (list.length === 0) {
+            container.innerHTML = '<tr><td colspan="4" class="text-center py-4">目前沒有新訂單</td></tr>';
+            return;
+        }
+        container.innerHTML = list.map(item => `
+            <tr class="fw-bold">
+                <td>${item.time.split(' ')[1]}</td>
+                <td>${item.name}<br><small class="text-muted">${item.phone}</small></td>
+                <td>${item.items.join('<br>')}</td>
+                <td>
+                    <button class="btn btn-success btn-lg w-100" 
+                        onclick="completeOrder('${item.phone}', '${item.time}')">
+                        出餐 ✅
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderCompleted(list) {
+        const container = document.getElementById('completed-list');
+        container.innerHTML = list.map(item => `
+            <tr>
+                <td>${item.time.split(' ')[1]}</td>
+                <td>${item.name}</td>
+                <td>${item.items.join(', ')}</td>
+                <td>$${item.total_price}</td>
+            </tr>
+        `).join('');
+    }
+
+    function completeOrder(phone, time) {
+        if(!confirm("確認這單已製作完成？")) return;
+        
+        fetch('/api/complete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone, time })
+        })
+        .then(res => res.json())
+        .then(() => {
+            loadData(); // 重新載入，該單會跑到下面去
+        });
+    }
+</script>
+</body>
+</html>
