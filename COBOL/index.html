@@ -2,101 +2,60 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COBOL 茶飲 - 顧客點餐</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>線上點餐系統</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", sans-serif; }
-        .menu-card { background: white; border-radius: 12px; border: 1px solid #eee; transition: all 0.2s; cursor: pointer; overflow: hidden; height: 100%; }
-        .menu-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: #ffc107; }
-        .card-img-wrap { width: 120px; height: 120px; overflow: hidden; border-radius: 12px; margin: 10px; }
-        .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .price-text { color: #d32f2f; font-weight: bold; font-size: 1.1rem; }
-        .cart-panel { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 20px; }
-        .option-btn-check:checked + .btn-outline-warning { background-color: #ffc107; color: #000; }
-    </style>
 </head>
-<body>
+<body class="bg-light">
 
-<div class="container py-4">
-    <div class="d-flex align-items-center mb-4">
-        <div class="bg-warning rounded-circle p-2 me-3"><i class="fas fa-store fa-2x text-white"></i></div>
-        <div><h2 class="mb-0 fw-bold">COBOL 職人手作茶飲</h2><small class="text-muted">自助點餐系統</small></div>
-    </div>
+<div class="container py-3">
+    <h1 class="text-center mb-4">🥤 飲料點餐</h1>
+    
+    <div class="row" id="menu-container">Loading...</div>
 
-    <div class="row">
-        <div class="col-lg-8"><div class="row g-3" id="menu-container"></div></div>
-        
-        <div class="col-lg-4">
-            <div class="cart-panel">
-                <h5 class="mb-3 fw-bold"><i class="fas fa-shopping-cart me-2"></i>我的訂單</h5>
-                <div class="mb-2">
-                    <input type="text" id="c_name" class="form-control mb-2" placeholder="您的稱呼 (必填)">
-                    <input type="text" id="c_phone" class="form-control" placeholder="手機號碼 (必填)">
-                </div>
-                <hr class="my-3">
-                <div id="cart-list" style="max-height: 300px; overflow-y: auto;">
-                    <div class="text-center text-muted py-4">尚未選擇飲品</div>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                    <span class="h5 mb-0">總計</span><span class="h4 text-danger fw-bold mb-0" id="total-price">$0</span>
-                </div>
-                <button class="btn btn-dark w-100 mt-3 py-2 fw-bold" onclick="submitOrder()">確認結帳</button>
-            </div>
-        </div>
-    </div>
+    <button class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle p-3 shadow" onclick="showCart()" style="width: 60px; height: 60px;">
+        🛒 <span id="cart-count" class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">0</span>
+    </button>
 </div>
 
 <div class="modal fade" id="optionModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title fw-bold" id="modal-title">選擇規格</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="modal-title"></h5></div>
             <div class="modal-body">
-                <input type="hidden" id="modal-id"><input type="hidden" id="modal-price"><input type="hidden" id="modal-name">
-                <div class="mb-3"><label class="fw-bold mb-2">甜度</label><div class="d-flex gap-2">
-                    <input type="radio" class="btn-check" name="sugar" id="s1" value="正常" checked><label class="btn btn-outline-warning flex-fill" for="s1">正常</label>
-                    <input type="radio" class="btn-check" name="sugar" id="s2" value="半糖"><label class="btn btn-outline-warning flex-fill" for="s2">半糖</label>
-                    <input type="radio" class="btn-check" name="sugar" id="s3" value="無糖"><label class="btn btn-outline-warning flex-fill" for="s3">無糖</label>
-                </div></div>
-                <div class="mb-3"><label class="fw-bold mb-2">冰塊</label><div class="d-flex gap-2">
-                    <input type="radio" class="btn-check" name="ice" id="i1" value="正常" checked><label class="btn btn-outline-warning flex-fill" for="i1">正常</label>
-                    <input type="radio" class="btn-check" name="ice" id="i2" value="少冰"><label class="btn btn-outline-warning flex-fill" for="i2">少冰</label>
-                    <input type="radio" class="btn-check" name="ice" id="i3" value="去冰"><label class="btn btn-outline-warning flex-fill" for="i3">去冰</label>
-                </div></div>
-                <div class="mb-3"><label class="fw-bold mb-2">數量</label><div class="input-group">
-                    <button class="btn btn-outline-secondary" onclick="adjQty(-1)">-</button><input type="text" class="form-control text-center" id="modal-qty" value="1" readonly><button class="btn btn-outline-secondary" onclick="adjQty(1)">+</button>
-                </div></div>
+                <label>甜度：</label>
+                <select id="sugar" class="form-select mb-2">
+                    <option>正常糖</option><option>半糖</option><option>微糖</option><option>無糖</option>
+                </select>
+                <label>冰塊：</label>
+                <select id="ice" class="form-select mb-3">
+                    <option>正常冰</option><option>少冰</option><option>微冰</option><option>去冰</option>
+                </select>
+                <label>數量：</label>
+                <input type="number" id="qty" class="form-control" value="1" min="1">
             </div>
-            <div class="modal-footer"><button class="btn btn-warning w-100 fw-bold" onclick="addToCart()">加入購物車</button></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="addToCartConfirm()">加入購物車</button>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="receiptModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="cartModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-check-circle"></i> 訂購成功！</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <h4 class="fw-bold mb-3">您的取餐號碼：<span class="text-primary">#<span id="receipt-num"></span></span></h4>
-                <p class="text-muted">請稍候，餐點製作中...</p>
-                <div class="card bg-light border-0 p-3 text-start">
-                    <h6 class="border-bottom pb-2">明細：</h6>
-                    <div id="receipt-detail" style="font-family: monospace;"></div>
-                    <hr>
-                    <div class="d-flex justify-content-between fw-bold">
-                        <span>總金額</span><span class="text-danger" id="receipt-total"></span>
-                    </div>
+            <div class="modal-header"><h5 class="modal-title">🛒 您的購物車</h5></div>
+            <div class="modal-body">
+                <div id="cart-items"></div>
+                <div class="input-group mt-3">
+                    <input type="text" id="c-name" class="form-control" placeholder="您的稱呼">
+                    <input type="text" id="c-phone" class="form-control" placeholder="手機號碼">
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">關閉</button>
+                <button class="btn btn-secondary" onclick="cart=[] ; updateCartUI();" data-bs-dismiss="modal">清空</button>
+                <button class="btn btn-success" onclick="checkout()">確認結帳</button>
             </div>
         </div>
     </div>
@@ -104,98 +63,77 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const menuItems = [
-        { id: 1, name: '錫蘭紅茶', price: 30, img: '/static/black_tea.png' },
-        { id: 2, name: '經典奶茶', price: 50, img: '/static/milk_tea.png' },
-        { id: 3, name: '茉香綠茶', price: 30, img: '/static/green_tea.png' },
-        { id: 4, name: '凍頂烏龍', price: 30, img: '/static/oolong.png' },
-        { id: 5, name: '拿鐵咖啡', price: 60, img: '/static/latte.png' }
-    ];
     let cart = [];
-    const optionModal = new bootstrap.Modal(document.getElementById('optionModal'));
-    const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+    let currentItem = null;
+    let products = []; // 存菜單資料
 
-    window.onload = renderMenu;
+    // 1. 網頁一載入，先去跟後端要菜單
+    fetch('/api/products')
+        .then(res => res.json())
+        .then(data => {
+            products = data; // 存起來
+            renderMenu();    // 畫在畫面上
+        });
 
     function renderMenu() {
-        document.getElementById('menu-container').innerHTML = menuItems.map(item => `
-            <div class="col-md-6"><div class="menu-card d-flex align-items-center p-2" onclick="openModal(${item.id})">
-                <div class="card-img-wrap me-3"><img src="${item.img}" alt="${item.name}"></div>
-                <div class="flex-grow-1"><h5 class="fw-bold mb-1">${item.name}</h5><div class="price-text">$${item.price}</div></div>
-            </div></div>`).join('');
+        const container = document.getElementById('menu-container');
+        container.innerHTML = products.map(item => `
+            <div class="col-6 col-md-4 mb-4">
+                <div class="card h-100 shadow-sm" onclick="openOption(${item.id})">
+                    <img src="/static/${item.image}" class="card-img-top" style="height: 150px; object-fit: contain;">
+                    <div class="card-body text-center p-2">
+                        <h5 class="card-title fs-6">${item.name}</h5>
+                        <p class="card-text text-danger fw-bold">$${item.price}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
     }
 
-    function openModal(id) {
-        const item = menuItems.find(x => x.id === id);
-        document.getElementById('modal-title').innerText = item.name;
-        document.getElementById('modal-id').value = item.id;
-        document.getElementById('modal-price').value = item.price;
-        document.getElementById('modal-name').value = item.name;
-        document.getElementById('modal-qty').value = 1;
-        document.getElementById('s1').checked = true;
-        document.getElementById('i1').checked = true;
-        optionModal.show();
+    function openOption(id) {
+        currentItem = products.find(p => p.id === id);
+        document.getElementById('modal-title').innerText = currentItem.name;
+        new bootstrap.Modal(document.getElementById('optionModal')).show();
     }
 
-    function adjQty(d) {
-        let q = parseInt(document.getElementById('modal-qty').value) + d;
-        if(q >= 1) document.getElementById('modal-qty').value = q;
+    function addToCartConfirm() {
+        const sugar = document.getElementById('sugar').value;
+        const ice = document.getElementById('ice').value;
+        const qty = parseInt(document.getElementById('qty').value);
+        
+        cart.push({ ...currentItem, sugar, ice, qty });
+        updateCartUI();
+        bootstrap.Modal.getInstance(document.getElementById('optionModal')).hide();
     }
 
-    function addToCart() {
-        cart.push({
-            id: document.getElementById('modal-id').value,
-            name: document.getElementById('modal-name').value,
-            price: parseInt(document.getElementById('modal-price').value),
-            qty: parseInt(document.getElementById('modal-qty').value),
-            sugar: document.querySelector('input[name="sugar"]:checked').value,
-            ice: document.querySelector('input[name="ice"]:checked').value
-        });
-        renderCart();
-        optionModal.hide();
+    function updateCartUI() {
+        document.getElementById('cart-count').innerText = cart.length;
+        document.getElementById('cart-items').innerHTML = cart.map((item, idx) => 
+            `<div class="d-flex justify-content-between border-bottom py-2">
+                <span>${item.name} (${item.sugar}/${item.ice}) x${item.qty}</span>
+                <span>$${item.price * item.qty} <button class="btn btn-sm btn-danger ms-2" onclick="cart.splice(${idx},1);updateCartUI()">x</button></span>
+             </div>`
+        ).join('') + `<div class="text-end fw-bold mt-2">總計: $${cart.reduce((a,b)=>a+b.price*b.qty,0)}</div>`;
     }
 
-    function renderCart() {
-        const list = document.getElementById('cart-list');
-        if(cart.length === 0) {
-            list.innerHTML = '<div class="text-center text-muted py-4">尚未選擇飲品</div>';
-            document.getElementById('total-price').innerText = '$0';
-            return;
-        }
-        let total = 0;
-        list.innerHTML = cart.map((item, i) => {
-            total += item.price * item.qty;
-            return `<div class="d-flex justify-content-between mb-2 border-bottom pb-2">
-                <div><b>${item.name}</b> <small>(${item.sugar}/${item.ice}) x${item.qty}</small></div>
-                <div class="text-end"><div>$${item.price*item.qty}</div><i class="fas fa-trash text-danger" style="cursor:pointer" onclick="delItem(${i})"></i></div>
-            </div>`;
-        }).join('');
-        document.getElementById('total-price').innerText = '$' + total;
-    }
+    function showCart() { new bootstrap.Modal(document.getElementById('cartModal')).show(); }
 
-    function delItem(i) { cart.splice(i, 1); renderCart(); }
-
-    function submitOrder() {
-        const name = document.getElementById('c_name').value;
-        const phone = document.getElementById('c_phone').value;
-        if(!name || !phone || cart.length === 0) return alert('請填寫完整並選購！');
+    function checkout() {
+        const name = document.getElementById('c-name').value;
+        const phone = document.getElementById('c-phone').value;
+        if(!name || !phone || cart.length === 0) return alert('請填寫資料並選購商品');
 
         fetch('/api/checkout', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ customer_name: name, customer_phone: phone, items: cart })
-        }).then(r => r.json()).then(data => {
-            // 顯示收據 Modal
-            document.getElementById('receipt-num').innerText = Math.floor(Math.random() * 100) + 1; // 假裝有個號碼
-            document.getElementById('receipt-detail').innerHTML = data.receipt_html;
-            document.getElementById('receipt-total').innerText = '$' + data.total;
-            receiptModal.show();
-
-            // 清空購物車
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert('訂單已送出！');
             cart = [];
-            document.getElementById('c_name').value = '';
-            document.getElementById('c_phone').value = '';
-            renderCart();
+            updateCartUI();
+            bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
         });
     }
 </script>

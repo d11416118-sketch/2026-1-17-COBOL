@@ -4,147 +4,131 @@
     <meta charset="UTF-8">
     <title>店員管理系統 (POS)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <meta http-equiv="refresh" content="30">
 </head>
 <body class="bg-dark text-light">
 
 <div class="container py-4">
     <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-            <h2 class="fw-bold"><i class="fas fa-utensils"></i> 廚房/櫃台管理系統</h2>
-        </div>
-        
+        <div class="col-md-6"><h2 class="fw-bold"><i class="fas fa-utensils"></i> 後台管理系統</h2></div>
         <div class="col-md-6 text-end">
             <div class="card bg-secondary text-white d-inline-block p-2">
                 <div class="input-group">
-                    <span class="input-group-text bg-dark text-white border-secondary">員工姓名</span>
-                    <input type="text" id="staff-name" class="form-control bg-dark text-white border-secondary" placeholder="請輸入名字">
+                    <input type="text" id="staff-name" class="form-control bg-dark text-white border-secondary" placeholder="員工姓名">
                     <button class="btn btn-success" onclick="clockIn('上班')">上班</button>
                     <button class="btn btn-danger" onclick="clockIn('下班')">下班</button>
                 </div>
-                <div id="clock-status" class="mt-1 small text-warning"></div>
+                <div id="clock-status" class="small text-warning mt-1"></div>
             </div>
         </div>
     </div>
 
-    <div class="card bg-secondary mb-4 border-0">
-        <div class="card-header bg-info text-dark fw-bold">
-            📋 最新打卡紀錄
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card bg-secondary mb-3 border-0">
+                <div class="card-header bg-warning text-dark fw-bold">🔥 待製作 (Pending)</div>
+                <div class="card-body bg-light text-dark p-0"><table class="table mb-0"><tbody id="pending-list"></tbody></table></div>
+            </div>
+            <div class="card bg-secondary border-0">
+                <div class="card-header bg-success text-white fw-bold">📜 已完成 (History)</div>
+                <div class="card-body bg-light text-dark p-0"><table class="table mb-0"><tbody id="completed-list"></tbody></table></div>
+            </div>
         </div>
-        <div class="card-body bg-light text-dark p-0">
-            <table class="table table-sm mb-0">
-                <thead><tr><th>時間</th><th>員工</th><th>狀態</th></tr></thead>
-                <tbody id="attendance-list"></tbody>
-            </table>
-        </div>
-    </div>
+        
+        <div class="col-md-4">
+            <div class="card bg-secondary mb-3 border-0">
+                <div class="card-header bg-info text-dark fw-bold">📋 打卡紀錄</div>
+                <div class="card-body bg-light text-dark p-0"><table class="table table-sm mb-0"><tbody id="attendance-list"></tbody></table></div>
+            </div>
 
-    <div class="card bg-secondary mb-4 border-0">
-        <div class="card-header bg-warning text-dark fw-bold">
-            🔥 待製作訂單 (Pending)
-        </div>
-        <div class="card-body bg-light text-dark p-0">
-            <table class="table table-striped table-hover mb-0 align-middle">
-                <thead><tr><th>時間</th><th>顧客</th><th width="40%">內容</th><th>操作</th></tr></thead>
-                <tbody id="pending-list"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card bg-secondary border-0">
-        <div class="card-header bg-success text-white fw-bold">
-            📜 今日已完成 (History)
-        </div>
-        <div class="card-body bg-light text-dark p-0">
-            <table class="table table-sm text-muted mb-0">
-                <thead><tr><th>時間</th><th>顧客</th><th>內容</th><th>金額</th></tr></thead>
-                <tbody id="completed-list"></tbody>
-            </table>
+            <div class="card bg-dark border-secondary">
+                <div class="card-header bg-primary text-white fw-bold">📦 商品上下架</div>
+                <div class="card-body">
+                    <form id="add-product-form" class="mb-3">
+                        <input type="text" name="name" class="form-control mb-2" placeholder="商品名稱 (如: 珍珠奶茶)" required>
+                        <input type="number" name="price" class="form-control mb-2" placeholder="價格" required>
+                        <input type="file" name="image" class="form-control mb-2" accept="image/*" required>
+                        <button type="submit" class="btn btn-primary w-100">➕ 上架新商品</button>
+                    </form>
+                    <hr class="text-white">
+                    <h6 class="text-white">目前架上商品：</h6>
+                    <ul id="product-list" class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                        </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    window.onload = loadData;
+    // 定時刷新訂單
+    setInterval(loadData, 5000); 
+    window.onload = function() { loadData(); loadProducts(); };
 
+    // 1. 載入訂單與打卡
     function loadData() {
-        fetch('/api/admin/data')
-            .then(res => res.json())
-            .then(data => {
-                renderPending(data.pending);
-                renderCompleted(data.completed);
-                renderAttendance(data.attendance); // 新增這行
-            });
-    }
-
-    // 渲染打卡紀錄
-    function renderAttendance(list) {
-        const container = document.getElementById('attendance-list');
-        if(list.length === 0) {
-            container.innerHTML = '<tr><td colspan="3" class="text-center text-muted">無紀錄</td></tr>';
-            return;
-        }
-        container.innerHTML = list.map(item => `
-            <tr>
-                <td>${item.time.split(' ')[1]}</td>
-                <td>${item.name}</td>
-                <td>
-                    <span class="badge ${item.action === '上班' ? 'bg-success' : 'bg-danger'}">
-                        ${item.action}
-                    </span>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    // 打卡動作
-    function clockIn(action) {
-        const name = document.getElementById('staff-name').value;
-        if(!name) { alert('請輸入員工姓名！'); return; }
-
-        fetch('/api/clockin', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ name, action })
-        })
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('clock-status').innerText = `${name} ${action} 成功!`;
-            setTimeout(() => document.getElementById('clock-status').innerText = '', 3000);
-            loadData(); // 刷新列表
+        fetch('/api/admin/data').then(r => r.json()).then(d => {
+            renderList('pending-list', d.pending, true);
+            renderList('completed-list', d.completed, false);
+            document.getElementById('attendance-list').innerHTML = d.attendance.map(i => 
+                `<tr><td>${i.time.split(' ')[1]}</td><td>${i.name}</td><td>${i.action}</td></tr>`).join('');
         });
     }
 
-    function renderPending(list) {
-        const container = document.getElementById('pending-list');
-        if (list.length === 0) {
-            container.innerHTML = '<tr><td colspan="4" class="text-center py-4">目前沒有新訂單</td></tr>';
-            return;
-        }
-        container.innerHTML = list.map(item => `
-            <tr class="fw-bold">
-                <td>${item.time.split(' ')[1]}</td>
-                <td>${item.name}<br><small class="text-muted">${item.phone}</small></td>
-                <td>${item.items.join('<br>')}</td>
-                <td><button class="btn btn-success btn-lg w-100" onclick="complete('${item.phone}', '${item.time}')">出餐 ✅</button></td>
-            </tr>
-        `).join('');
+    function renderList(id, list, isPending) {
+        document.getElementById(id).innerHTML = list.length ? list.map(i => `
+            <tr>
+                <td>${i.time.split(' ')[1]}</td>
+                <td>${i.name}<br><small>${i.items.join('<br>')}</small></td>
+                ${isPending ? `<td><button class="btn btn-sm btn-success" onclick="complete('${i.phone}','${i.time}')">OK</button></td>` : ''}
+            </tr>`).join('') : '<tr><td colspan="3" class="text-center text-muted">無資料</td></tr>';
     }
 
-    function renderCompleted(list) {
-        const container = document.getElementById('completed-list');
-        container.innerHTML = list.map(item => `
-            <tr><td>${item.time.split(' ')[1]}</td><td>${item.name}</td><td>${item.items.join(', ')}</td><td>$${item.price}</td></tr>
-        `).join('');
+    // 2. 載入商品列表
+    function loadProducts() {
+        fetch('/api/products').then(r => r.json()).then(products => {
+            document.getElementById('product-list').innerHTML = products.map(p => `
+                <li class="list-group-item bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <span>${p.name} ($${p.price})</span>
+                    <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">下架</button>
+                </li>
+            `).join('');
+        });
     }
 
+    // 3. 上架商品 (包含圖片上傳)
+    document.getElementById('add-product-form').onsubmit = function(e) {
+        e.preventDefault();
+        const formData = new FormData(this); // 自動打包文字和圖片
+        fetch('/api/products', { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    alert('上架成功！');
+                    this.reset();
+                    loadProducts(); // 刷新列表
+                } else {
+                    alert('失敗：' + res.msg);
+                }
+            });
+    };
+
+    // 4. 下架商品
+    function deleteProduct(id) {
+        if(!confirm('確定要下架嗎？')) return;
+        fetch(`/api/products/${id}`, { method: 'DELETE' })
+            .then(() => loadProducts());
+    }
+
+    // 其他原有功能
     function complete(phone, time) {
-        if(!confirm("確認出餐？")) return;
-        fetch('/api/complete', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ phone, time })
-        }).then(() => loadData());
+        fetch('/api/complete', { method: 'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone, time}) }).then(loadData);
+    }
+    function clockIn(action) {
+        const name = document.getElementById('staff-name').value;
+        if(!name) return alert('請輸入姓名');
+        fetch('/api/clockin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, action}) }).then(() => {
+            document.getElementById('clock-status').innerText = '打卡成功'; loadData();
+        });
     }
 </script>
 </body>
