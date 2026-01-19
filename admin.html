@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>1959 製茶所 | 營運後台 (COBOL Powered)</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2310b981%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M6 2h12l-2 14H8L6 2z%22/><path d=%22M10 22h4%22/><path d=%22M12 16v6%22/><path d=%22M18 2h2v3c0 1.66-1.34 3-3 3h-1%22/></svg>">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .sidebar-link.active {
+            background-color: #f3f4f6;
+            color: #e11d48;
+            border-right: 4px solid #e11d48;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col">
+        <div class="h-20 flex items-center px-6 border-b border-gray-100">
+            <div class="flex items-center space-x-3 group cursor-pointer">
+                <div class="relative flex items-center justify-center">
+                    <svg class="w-10 h-10 text-emerald-600 transform group-hover:rotate-12 transition-transform"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2L3.5 7v10L12 22l8.5-5V7L12 2z" stroke-dasharray="1 1" opacity="0.5" />
+                        <path d="M12 4L5 8v8l7 4 7-4V8l-7-4z" stroke-width="2" />
+                        <g transform="translate(8, 8.5) scale(0.33)">
+                            <path d="M6 2h12l-2 14H8L6 2z" stroke-width="3" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path d="M18 2h2v3c0 1.66-1.34 3-3 3h-1" stroke-width="3" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path d="M10 22h4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M12 16v6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                        </g>
+                    </svg>
+                </div>
+                <div class="flex flex-col leading-none">
+                    <span class="font-bold text-gray-800 tracking-tighter text-lg font-serif">1959 製茶所</span>
+                    <span class="text-[8px] font-mono text-gray-400 uppercase tracking-[0.2em] mt-1">Admin Panel</span>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 py-4">
+            <button onclick="switchTab('orders')" id="tab-btn-orders"
+                class="sidebar-link active flex items-center w-full px-6 py-4 text-gray-500 hover:bg-gray-50 transition">
+                <i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> 訂單管理
+            </button>
+            <button onclick="switchTab('products')" id="tab-btn-products"
+                class="sidebar-link flex items-center w-full px-6 py-4 text-gray-500 hover:bg-gray-50 transition">
+                <i data-lucide="package" class="w-5 h-5 mr-3"></i> 商品管理
+            </button>
+            <button onclick="switchTab('staff')" id="tab-btn-staff"
+                class="sidebar-link flex items-center w-full px-6 py-4 text-gray-500 hover:bg-gray-50 transition">
+                <i data-lucide="users" class="w-5 h-5 mr-3"></i> 員工管理
+            </button>
+            <a href="/"
+                class="sidebar-link flex items-center px-6 py-4 text-gray-500 hover:bg-gray-50 transition mt-auto border-t border-gray-50">
+                <i data-lucide="external-link" class="w-5 h-5 mr-3"></i> 回到前台
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-100">
+            <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-[10px] font-bold text-gray-400 uppercase mb-2">伺服器狀態</p>
+                <div class="flex items-center">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse mr-2"></div>
+                    <span class="text-xs text-gray-600 font-medium">連線正常 / POLLING</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+
+        <!-- 1. 訂單管理區 (Default) -->
+        <section id="section-orders" class="p-8 space-y-8">
+            <header class="flex items-center justify-between mb-2">
+                <h2 class="text-2xl font-black text-gray-800">訂單管理</h2>
+                <div class="flex items-center text-xs text-gray-400 bg-white px-3 py-1.5 rounded-full shadow-sm">
+                    <div class="w-2 h-2 bg-amber-400 rounded-full mr-2 animate-pulse"></div> 即時同步中
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 gap-8">
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <i data-lucide="flame" class="w-4 h-4 mr-2 text-rose-500"></i> 待製作訂單
+                    </h3>
+                    <div id="pending-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div
+                            class="bg-white p-12 rounded-2xl flex items-center justify-center border border-dashed border-gray-200">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <i data-lucide="history" class="w-4 h-4 mr-2 text-gray-400"></i> 近期完成
+                    </h3>
+                    <div id="completed-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 opacity-75">
+                        <!-- Completed items -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 商品管理區 -->
+        <section id="section-products" class="p-8 hidden space-y-6">
+            <header>
+                <h2 class="text-2xl font-black text-gray-800 mb-4">商品管理</h2>
+                <div class="relative max-w-2xl">
+                    <i data-lucide="search"
+                        class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
+                    <input type="text" id="product-search" oninput="filterProducts(this.value)"
+                        placeholder="輸入關鍵字搜尋商品..."
+                        class="w-full pl-12 pr-4 py-4 bg-white border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-emerald-500/20 text-lg">
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Add Form -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-4">
+                        <h3 class="font-bold text-gray-800 mb-6">新增商品</h3>
+                        <form onsubmit="handleAddProduct(event)" class="space-y-4">
+                            <input type="text" name="name" placeholder="商品名稱"
+                                class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20"
+                                required>
+                            <input type="number" name="price" placeholder="價格"
+                                class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20"
+                                required>
+
+                            <div class="relative">
+                                <input type="file" name="image" id="file-input" onchange="previewImage(this)"
+                                    class="hidden" accept="image/*" required>
+                                <label for="file-input"
+                                    class="flex items-center justify-center w-full px-4 py-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition">
+                                    <div class="text-center text-xs text-gray-400">
+                                        <i data-lucide="image" class="w-5 h-5 mx-auto mb-2"></i>
+                                        點擊上傳商品圖片
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div id="preview-container"
+                                class="hidden relative rounded-xl overflow-hidden h-40 bg-gray-50 border border-gray-100">
+                                <img id="image-preview" src="" class="w-full h-full object-contain">
+                                <button type="button" onclick="resetPreview()"
+                                    class="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full text-red-500 shadow-md"><i
+                                        data-lucide="x" class="w-4 h-4"></i></button>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full bg-emerald-500 text-white py-4 rounded-xl font-bold hover:bg-emerald-600 transition shadow-lg shadow-emerald-100">確認上架</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Product Table -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div id="product-list" class="grid grid-cols-1 divide-y divide-gray-50">
+                            <!-- Product items -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 員工管理區 -->
+        <section id="section-staff" class="p-8 hidden space-y-8">
+            <h2 class="text-2xl font-black text-gray-800">員工管理</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Clock Card -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-6 text-center">
+                        <div id="current-time-display" class="text-3xl font-black text-emerald-500 font-mono">00:00:00
+                        </div>
+                        <p class="text-gray-400 text-sm">請輸入姓名後點擊上下班</p>
+
+                        <input type="text" id="staff-name" placeholder="員工姓名"
+                            class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-center text-xl font-bold focus:ring-2 focus:ring-emerald-500/20">
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <button onclick="clockIn('上班')"
+                                class="bg-emerald-500 text-white py-6 rounded-2xl font-black text-lg hover:bg-emerald-600 transition shadow-lg shadow-emerald-100 active:scale-95">上班</button>
+                            <button onclick="clockIn('下班')"
+                                class="bg-gray-100 text-gray-600 py-6 rounded-2xl font-black text-lg hover:bg-gray-200 transition active:scale-95">下班</button>
+                        </div>
+                        <div id="clock-status" class="text-sm font-bold text-emerald-600 h-4"></div>
+                    </div>
+                </div>
+
+                <!-- Attendance Table -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-800 mb-4">打卡報表 (最近 10 筆)</h3>
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr
+                                    class="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-50">
+                                    <th class="py-4 px-2">日期時間</th>
+                                    <th class="py-4 px-2">姓名</th>
+                                    <th class="py-4 px-2">動作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendance-list">
+                                <!-- Attendance rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="/static/js/admin.js"></script>
+    <script>
+        lucide.createIcons();
+        // Digital Clock for Staff section
+        setInterval(() => {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ":" +
+                now.getMinutes().toString().padStart(2, '0') + ":" +
+                now.getSeconds().toString().padStart(2, '0');
+            const el = document.getElementById('current-time-display');
+            if (el) el.innerText = timeStr;
+        }, 1000);
+    </script>
+</body>
+
+</html>
