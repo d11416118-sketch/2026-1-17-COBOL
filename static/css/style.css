@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+:root {
+    --primary-color: #e11d48;
+    /* rose-600 */
+    --accent-color: #f59e0b;
+    /* amber-500 */
+}
+
+body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background-color: #f8fafc;
+}
+
+.product-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.product-card:hover img {
+    transform: scale(1.05);
+}
+
+.product-card img {
+    transition: transform 0.3s ease;
+}
+
+/* Button Active Effect */
+button,
+.category-btn {
+    transition: transform 0.1s ease;
+}
+
+button:active,
+.category-btn:active {
+    transform: scale(0.95);
+}
+
+.cart-float {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Modal animation */
+.modal-enter {
+    animation: modal-in 0.3s ease-out;
+}
+
+@keyframes modal-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.gradient-text {
+    background: linear-gradient(to right, #e11d48, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
